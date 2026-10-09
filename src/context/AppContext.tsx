@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { 
   Member, 
+  Division,
   AttendanceSession, 
   MosqueEvent, 
   MosqueProfile, 
@@ -31,6 +32,7 @@ interface AppContextType {
   addMember: (memberData: Omit<Member, 'id' | 'nia'> & { customNia?: string }) => Member;
   updateMember: (member: Member) => void;
   deleteMember: (id: string) => void;
+  importMembers: (newMembers: Member[], mode: 'append' | 'replace') => void;
   getMemberById: (id: string) => Member | undefined;
   getMemberByNia: (nia: string) => Member | undefined;
 
@@ -66,6 +68,14 @@ const STORAGE_KEYS = {
   PROFILE: 'sim_remas_profile_v1',
 };
 
+export const normalizeDivision = (div: any): Division => {
+  if (!div) return 'Ekraf & Event';
+  const s = String(div).toLowerCase().trim();
+  if (s.includes('bph')) return 'BPH';
+  if (s.includes('media') || s.includes('humas') || s.includes('it') || s.includes('publikasi') || s.includes('kemitraan')) return 'Media & Humas';
+  return 'Ekraf & Event';
+};
+
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [activeTab, setActiveTab] = useState<ActiveTab>('dashboard');
   const [selectedMemberForCard, setSelectedMemberForCard] = useState<Member | null>(null);
@@ -75,7 +85,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [members, setMembers] = useState<Member[]>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEYS.MEMBERS);
-      return saved ? JSON.parse(saved) : initialMembers;
+      if (saved) {
+        const parsed: Member[] = JSON.parse(saved);
+        return parsed.map(m => ({
+          ...m,
+          division: normalizeDivision(m.division),
+        }));
+      }
+      return initialMembers;
     } catch {
       return initialMembers;
     }
@@ -167,6 +184,26 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
     if (verifyMemberModal?.id === id) {
       setVerifyMemberModal(null);
+    }
+  };
+
+  const importMembers = (newMembers: Member[], mode: 'append' | 'replace') => {
+    const normalized = newMembers.map(m => ({
+      ...m,
+      division: normalizeDivision(m.division),
+    }));
+
+    if (mode === 'replace') {
+      setMembers(normalized);
+      if (normalized.length > 0) {
+        setSelectedMemberForCard(normalized[0]);
+      }
+    } else {
+      setMembers(prev => {
+        const existingNias = new Set(prev.map(m => m.nia.toLowerCase().trim()));
+        const toAdd = normalized.filter(m => !existingNias.has(m.nia.toLowerCase().trim()));
+        return [...prev, ...toAdd];
+      });
     }
   };
 
@@ -378,6 +415,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         addMember,
         updateMember,
         deleteMember,
+        importMembers,
         getMemberById,
         getMemberByNia,
 

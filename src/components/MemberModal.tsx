@@ -11,14 +11,9 @@ interface MemberModalProps {
 }
 
 const DIVISIONS: Division[] = [
-  'BPH (Badan Pengurus Harian)',
-  'Dakwah & Kajian',
-  'Humas & Kemitraan',
-  'Media, IT & Publikasi',
-  'Kepemudaan & Olahraga',
-  'Keputrian & Pemberdayaan',
-  'Logistik & Sarpras',
-  'Anggota Aktif',
+  'BPH',
+  'Media & Humas',
+  'Ekraf & Event',
 ];
 
 const ROLES: RoleInOrg[] = [
@@ -53,7 +48,7 @@ export const MemberModal: React.FC<MemberModalProps> = ({
     address: '',
     rtRw: '01/04',
     educationJob: 'Pelajar / Mahasiswa',
-    division: 'Dakwah & Kajian' as Division,
+    division: 'Media & Humas' as Division,
     role: 'Anggota' as RoleInOrg,
     joinedDate: new Date().toISOString().slice(0, 10),
     status: 'Aktif' as MemberStatus,
@@ -103,7 +98,7 @@ export const MemberModal: React.FC<MemberModalProps> = ({
         address: '',
         rtRw: '01/04',
         educationJob: 'Pelajar / Mahasiswa',
-        division: 'Dakwah & Kajian',
+        division: 'Media & Humas',
         role: 'Anggota',
         joinedDate: new Date().toISOString().slice(0, 10),
         status: 'Aktif',

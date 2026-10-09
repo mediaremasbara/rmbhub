@@ -3,14 +3,9 @@ export type Gender = 'Ikhwan' | 'Akhwat';
 export type MemberStatus = 'Aktif' | 'Non-aktif' | 'Alumni' | 'Merantau/Studi';
 
 export type Division = 
-  | 'BPH (Badan Pengurus Harian)'
-  | 'Dakwah & Kajian'
-  | 'Humas & Kemitraan'
-  | 'Media, IT & Publikasi'
-  | 'Kepemudaan & Olahraga'
-  | 'Keputrian & Pemberdayaan'
-  | 'Logistik & Sarpras'
-  | 'Anggota Aktif';
+  | 'BPH'
+  | 'Media & Humas'
+  | 'Ekraf & Event';
 
 export type RoleInOrg =
   | 'Ketua Umum'
@@ -103,6 +98,15 @@ export interface MosqueEvent {
   endDate: string;
   status: EventStatus;
   budget: number;
+  collectedFunds?: number; // Dana yang terkumpul saat ini
+  fundHistory?: {
+    id: string;
+    date: string;
+    amount: number;
+    type?: 'add' | 'set';
+    note: string;
+    newTotal: number;
+  }[];
   description: string;
   location: string;
   participants: EventParticipant[];
@@ -120,4 +124,5 @@ export interface MosqueProfile {
   cardValidUntil: string;
   contactNumber: string;
   emblemUrl: string;
+  stampUrl?: string; // Cap / Stempel Resmi Remaja Masjid
 }

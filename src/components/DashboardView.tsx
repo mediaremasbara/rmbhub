@@ -266,10 +266,14 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                     <h4 className="font-bold text-slate-900 text-xs sm:text-sm">
                       {evt.title}
                     </h4>
-                    <p className="text-[11px] text-slate-500 flex items-center gap-2">
+                    <p className="text-[11px] text-slate-500 flex flex-wrap items-center gap-2">
                       <span>📍 {evt.location}</span>
                       <span>·</span>
-                      <span>👥 {evt.participants.length} Panitia & Peserta</span>
+                      <span>👥 {evt.participants.length} Panitia</span>
+                      <span>·</span>
+                      <span className="text-emerald-800 font-semibold font-mono bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100">
+                        Dana: {formatRupiah(evt.collectedFunds || 0)} ({Math.round(((evt.collectedFunds || 0) / (evt.budget || 1)) * 100)}%)
+                      </span>
                     </p>
                   </div>
 

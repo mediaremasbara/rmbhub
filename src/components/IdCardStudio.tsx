@@ -4,68 +4,106 @@ import { Member, MosqueProfile } from '../types';
 import { generateQrCodeUrl } from '../utils/helpers';
 import { 
   Printer, 
-  Layers, 
   RotateCw, 
   Check, 
   Sparkles,
-  QrCode,
-  Download,
-  Users
+  QrCode, 
+  Users,
+  Palette,
+  ShieldCheck,
+  Eye
 } from 'lucide-react';
 
-interface IdCardTheme {
+export interface IdCardTheme {
   id: string;
   name: string;
+  colorSwatch: string;
   primaryBg: string;
   headerBg: string;
   accentColor: string;
+  secondaryAccent: string;
   borderClass: string;
+  borderAccent: string;
   textColor: string;
   subTextColor: string;
+  badgeClass: string;
+  glowColor: string;
+  patternStroke: string;
+  patternFill: string;
 }
 
-const THEMES: Record<string, IdCardTheme> = {
+export const THEMES: Record<string, IdCardTheme> = {
   emerald: {
     id: 'emerald',
     name: 'Hijau Zamrud (Islami)',
-    primaryBg: 'bg-emerald-950',
-    headerBg: 'bg-emerald-900',
+    colorSwatch: 'bg-emerald-700',
+    primaryBg: 'bg-gradient-to-br from-[#064e3b] via-[#047857] to-[#022c22]',
+    headerBg: 'bg-[#064e3b]/90',
     accentColor: 'text-amber-300',
-    borderClass: 'border-amber-400/40',
+    secondaryAccent: 'text-amber-200',
+    borderClass: 'border-amber-400/50',
+    borderAccent: 'border-amber-400',
     textColor: 'text-white',
-    subTextColor: 'text-emerald-200',
+    subTextColor: 'text-emerald-100',
+    badgeClass: 'bg-amber-400 text-slate-950 font-bold',
+    glowColor: 'bg-amber-400/20',
+    patternStroke: '#fbbf24',
+    patternFill: '#10b981',
   },
   navy: {
     id: 'navy',
     name: 'Biru Navy Elegan',
-    primaryBg: 'bg-slate-950',
-    headerBg: 'bg-sky-950',
+    colorSwatch: 'bg-blue-800',
+    primaryBg: 'bg-gradient-to-br from-[#0a2540] via-[#103b6e] to-[#07192c]',
+    headerBg: 'bg-[#0e315d]/90',
     accentColor: 'text-sky-300',
-    borderClass: 'border-sky-400/40',
+    secondaryAccent: 'text-cyan-200',
+    borderClass: 'border-sky-400/60',
+    borderAccent: 'border-sky-400',
     textColor: 'text-white',
-    subTextColor: 'text-sky-200',
+    subTextColor: 'text-sky-100',
+    badgeClass: 'bg-sky-400 text-slate-950 font-bold',
+    glowColor: 'bg-sky-400/25',
+    patternStroke: '#38bdf8',
+    patternFill: '#0284c7',
   },
   maroon: {
     id: 'maroon',
     name: 'Merah Marun Royal',
-    primaryBg: 'bg-stone-950',
-    headerBg: 'bg-rose-950',
-    accentColor: 'text-amber-200',
-    borderClass: 'border-amber-300/40',
+    colorSwatch: 'bg-rose-900',
+    primaryBg: 'bg-gradient-to-br from-[#500714] via-[#750e20] to-[#34040c]',
+    headerBg: 'bg-[#630b1b]/90',
+    accentColor: 'text-rose-200',
+    secondaryAccent: 'text-amber-200',
+    borderClass: 'border-rose-400/60',
+    borderAccent: 'border-rose-300',
     textColor: 'text-white',
-    subTextColor: 'text-rose-200',
+    subTextColor: 'text-rose-100',
+    badgeClass: 'bg-rose-500 text-white font-bold',
+    glowColor: 'bg-rose-500/25',
+    patternStroke: '#fb7185',
+    patternFill: '#be123c',
   },
   gold: {
     id: 'gold',
     name: 'Hitam Emas Khidmat',
-    primaryBg: 'bg-neutral-950',
-    headerBg: 'bg-zinc-900',
+    colorSwatch: 'bg-zinc-900',
+    primaryBg: 'bg-gradient-to-br from-[#141416] via-[#24242a] to-[#0a0a0c]',
+    headerBg: 'bg-[#24242a]/90',
     accentColor: 'text-yellow-400',
-    borderClass: 'border-yellow-500/50',
+    secondaryAccent: 'text-amber-300',
+    borderClass: 'border-yellow-500/60',
+    borderAccent: 'border-yellow-400',
     textColor: 'text-white',
-    subTextColor: 'text-neutral-300',
+    subTextColor: 'text-zinc-200',
+    badgeClass: 'bg-yellow-400 text-slate-950 font-bold',
+    glowColor: 'bg-yellow-400/25',
+    patternStroke: '#facc15',
+    patternFill: '#ca8a04',
   },
 };
+
+export type PatternType = 'islamic-star' | 'arabesque' | 'guilloche' | 'subtle';
 
 export const IdCardStudio: React.FC = () => {
   const { 
@@ -79,6 +117,8 @@ export const IdCardStudio: React.FC = () => {
   const [activeTheme, setActiveTheme] = useState<string>(profile.cardTheme || 'emerald');
   const [orientation, setOrientation] = useState<'landscape' | 'portrait'>('landscape');
   const [cardSide, setCardSide] = useState<'both' | 'front' | 'back'>('both');
+  const [patternType, setPatternType] = useState<PatternType>('islamic-star');
+  const [patternDensity, setPatternDensity] = useState<'normal' | 'vivid'>('normal');
   const [printMode, setPrintMode] = useState<'single' | 'batch'>('single');
   const [selectedBatchMembers, setSelectedBatchMembers] = useState<string[]>(
     members.slice(0, 8).map(m => m.id)
@@ -137,11 +177,14 @@ export const IdCardStudio: React.FC = () => {
       <div className="no-print bg-white rounded-xl border border-slate-200 p-5 shadow-xs">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div>
-            <h2 className="text-lg font-bold text-slate-900 tracking-tight">
-              Studio Kartu Tanda Anggota (KTA) Digital
+            <h2 className="text-lg font-bold text-slate-900 tracking-tight flex items-center gap-2">
+              <span>Studio Kartu Tanda Anggota (KTA) Digital</span>
+              <span className="text-[11px] font-semibold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full">
+                CR80 Standar Resmi
+              </span>
             </h2>
             <p className="text-xs text-slate-500 mt-0.5">
-              Desain kartu anggota resmi berstandar CR80 siap cetak presisi untuk {profile.orgName}.
+              Desain kartu anggota resmi dengan motif ornamen Islami, QR verifikasi, dan cap resmi siap cetak presisi untuk {profile.orgName}.
             </p>
           </div>
 
@@ -182,7 +225,7 @@ export const IdCardStudio: React.FC = () => {
         </div>
 
         {/* Options Row */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-5 pt-4 border-t border-slate-100 text-xs">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mt-5 pt-4 border-t border-slate-100 text-xs">
           {/* Member selector (for single mode) */}
           {printMode === 'single' ? (
             <div>
@@ -228,19 +271,54 @@ export const IdCardStudio: React.FC = () => {
 
           {/* Theme selector */}
           <div>
-            <label className="block text-slate-500 font-medium mb-1.5">Tema Warna KTA:</label>
+            <label className="block text-slate-500 font-medium mb-1.5 flex items-center gap-1.5">
+              <Palette className="w-3.5 h-3.5 text-slate-400" />
+              <span>Tema Warna KTA:</span>
+            </label>
             <div className="flex items-center gap-1.5">
               {Object.values(THEMES).map(t => (
                 <button
                   key={t.id}
                   onClick={() => setActiveTheme(t.id)}
                   title={t.name}
-                  className={`w-7 h-7 rounded-lg transition-transform ${t.primaryBg} ${
-                    activeTheme === t.id ? 'ring-2 ring-emerald-600 scale-110 shadow-xs' : 'opacity-80 hover:opacity-100'
+                  className={`w-7 h-7 rounded-lg transition-transform ${t.colorSwatch} ${
+                    activeTheme === t.id ? 'ring-2 ring-emerald-600 scale-110 shadow-xs' : 'opacity-85 hover:opacity-100'
                   }`}
                 />
               ))}
-              <span className="text-slate-600 ml-1.5 font-medium">{theme.name}</span>
+              <span className="text-slate-700 ml-1 font-semibold text-[11px] truncate">{theme.name}</span>
+            </div>
+          </div>
+
+          {/* Motif / Pattern selector */}
+          <div>
+            <label className="block text-slate-500 font-medium mb-1.5 flex items-center gap-1.5">
+              <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+              <span>Motif Ornamen KTA:</span>
+            </label>
+            <div className="flex items-center gap-1">
+              <select
+                value={patternType}
+                onChange={(e) => setPatternType(e.target.value as PatternType)}
+                className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 text-xs focus:outline-emerald-600 focus:bg-white"
+              >
+                <option value="islamic-star">Bintang Islami (8-Point Star)</option>
+                <option value="arabesque">Ornamen Arabesque & Kubah</option>
+                <option value="guilloche">Gelombang Sekuriti (Guilloche)</option>
+                <option value="subtle">Mikro Geometris Halus</option>
+              </select>
+              <button
+                type="button"
+                onClick={() => setPatternDensity(prev => prev === 'normal' ? 'vivid' : 'normal')}
+                title="Tingkat ketegasan motif"
+                className={`px-2 py-1.5 rounded-lg border text-[11px] font-semibold shrink-0 cursor-pointer ${
+                  patternDensity === 'vivid'
+                    ? 'bg-amber-100 border-amber-300 text-amber-900'
+                    : 'bg-slate-100 border-slate-200 text-slate-600'
+                }`}
+              >
+                {patternDensity === 'vivid' ? 'Tegas' : 'Halus'}
+              </button>
             </div>
           </div>
 
@@ -274,15 +352,15 @@ export const IdCardStudio: React.FC = () => {
               <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-lg">
                 <button
                   onClick={() => setCardSide('both')}
-                  className={`flex-1 py-1 px-2 text-center rounded-md font-medium transition-colors ${
+                  className={`flex-1 py-1 px-1.5 text-center rounded-md font-medium transition-colors ${
                     cardSide === 'both' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600'
                   }`}
                 >
-                  Depan & Belakang
+                  Dua Sisi
                 </button>
                 <button
                   onClick={() => setCardSide('front')}
-                  className={`flex-1 py-1 px-2 text-center rounded-md font-medium transition-colors ${
+                  className={`flex-1 py-1 px-1.5 text-center rounded-md font-medium transition-colors ${
                     cardSide === 'front' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600'
                   }`}
                 >
@@ -290,7 +368,7 @@ export const IdCardStudio: React.FC = () => {
                 </button>
                 <button
                   onClick={() => setCardSide('back')}
-                  className={`flex-1 py-1 px-2 text-center rounded-md font-medium transition-colors ${
+                  className={`flex-1 py-1 px-1.5 text-center rounded-md font-medium transition-colors ${
                     cardSide === 'back' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600'
                   }`}
                 >
@@ -311,14 +389,17 @@ export const IdCardStudio: React.FC = () => {
           <div className="flex flex-wrap items-center justify-center gap-8 py-6">
             {(cardSide === 'both' || cardSide === 'front') && (
               <div className="flex flex-col items-center">
-                <span className="no-print text-xs font-semibold text-slate-500 mb-2">
-                  MUKA DEPAN (FRONT)
+                <span className="no-print text-xs font-semibold text-slate-500 mb-2 flex items-center gap-1.5">
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>MUKA DEPAN (FRONT)</span>
                 </span>
                 <CardFront
                   member={currentMember}
                   profile={profile}
                   theme={theme}
                   orientation={orientation}
+                  patternType={patternType}
+                  patternDensity={patternDensity}
                   qrCodeUrl={qrCodeUrls[currentMember.id] || ''}
                   onQrClick={() => setVerifyMemberModal(currentMember)}
                 />
@@ -327,14 +408,17 @@ export const IdCardStudio: React.FC = () => {
 
             {(cardSide === 'both' || cardSide === 'back') && (
               <div className="flex flex-col items-center">
-                <span className="no-print text-xs font-semibold text-slate-500 mb-2">
-                  MUKA BELAKANG (BACK)
+                <span className="no-print text-xs font-semibold text-slate-500 mb-2 flex items-center gap-1.5">
+                  <Eye className="w-3.5 h-3.5 text-blue-600" />
+                  <span>MUKA BELAKANG (BACK)</span>
                 </span>
                 <CardBack
                   member={currentMember}
                   profile={profile}
                   theme={theme}
                   orientation={orientation}
+                  patternType={patternType}
+                  patternDensity={patternDensity}
                 />
               </div>
             )}
@@ -344,10 +428,10 @@ export const IdCardStudio: React.FC = () => {
           <div className="no-print max-w-xl mx-auto bg-amber-50/70 border border-amber-200/80 rounded-xl p-4 text-xs text-amber-900 flex items-start gap-3">
             <span className="text-amber-600 font-bold text-sm">💡</span>
             <div>
-              <p className="font-semibold text-amber-950">Petunjuk Cetak Presisi:</p>
+              <p className="font-semibold text-amber-950">Petunjuk Cetak Presisi & Berkualitas:</p>
               <p className="text-amber-800 mt-0.5">
-                Gunakan pengaturan kertas standar A4 atau kertas foto/kartu PVC ukuran 85.6mm x 53.98mm (CR80 standard).
-                Pastikan mencentang opsi <strong>"Background Graphics" (Grafik Latar Belakang)</strong> di jendela dialog printer browser agar warna dan logo tercetak sempurna.
+                Format kartu telah disesuaikan dengan rasio kartu ID standar ISO/IEC 7810 CR80 (85.6mm x 53.98mm). 
+                Pastikan mencentang opsi <strong>"Background Graphics" (Grafik Latar Belakang)</strong> di pengaturan printer browser agar warna tema ({theme.name}), motif ornamen, dan cap resmi tercetak jelas.
               </p>
             </div>
           </div>
@@ -410,6 +494,8 @@ export const IdCardStudio: React.FC = () => {
                       profile={profile}
                       theme={theme}
                       orientation={orientation}
+                      patternType={patternType}
+                      patternDensity={patternDensity}
                       qrCodeUrl={qrCodeUrls[m.id] || ''}
                       onQrClick={() => setVerifyMemberModal(m)}
                     />
@@ -418,6 +504,8 @@ export const IdCardStudio: React.FC = () => {
                       profile={profile}
                       theme={theme}
                       orientation={orientation}
+                      patternType={patternType}
+                      patternDensity={patternDensity}
                     />
                   </div>
                 ))}
@@ -430,6 +518,152 @@ export const IdCardStudio: React.FC = () => {
 };
 
 // ============================================================================
+// ISLAMIC GEOMETRIC PATTERN & MOTIF OVERLAY
+// ============================================================================
+const CardPatternOverlay: React.FC<{
+  theme: IdCardTheme;
+  patternType: PatternType;
+  density: 'normal' | 'vivid';
+}> = ({ theme, patternType, density }) => {
+  const opacity = density === 'vivid' ? 0.22 : 0.12;
+
+  return (
+    <div className="absolute inset-0 pointer-events-none overflow-hidden z-0 select-none">
+      {/* 1. Islamic 8-Point Star Geometric Girih Pattern */}
+      {patternType === 'islamic-star' && (
+        <>
+          <svg className="absolute inset-0 w-full h-full" style={{ opacity }}>
+            <defs>
+              <pattern id="islamic-star-pattern" width="48" height="48" patternUnits="userSpaceOnUse">
+                {/* 8-point star (Rub el Hizb) interlocking geometry */}
+                <path
+                  d="M24 6 L30 18 L42 24 L30 30 L24 42 L18 30 L6 24 L18 18 Z"
+                  fill="none"
+                  stroke={theme.patternStroke}
+                  strokeWidth="1.2"
+                />
+                <rect
+                  x="12"
+                  y="12"
+                  width="24"
+                  height="24"
+                  fill="none"
+                  stroke={theme.patternStroke}
+                  strokeWidth="0.8"
+                  transform="rotate(45 24 24)"
+                />
+                <circle cx="24" cy="24" r="3.5" fill="none" stroke={theme.patternStroke} strokeWidth="0.8" />
+                <circle cx="0" cy="0" r="2.5" fill={theme.patternStroke} />
+                <circle cx="48" cy="0" r="2.5" fill={theme.patternStroke} />
+                <circle cx="0" cy="48" r="2.5" fill={theme.patternStroke} />
+                <circle cx="48" cy="48" r="2.5" fill={theme.patternStroke} />
+              </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#islamic-star-pattern)" />
+          </svg>
+          {/* Central Arabesque Rosette Watermark */}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 rounded-full border border-white/10 pointer-events-none flex items-center justify-center opacity-25">
+            <div className="w-36 h-36 rounded-full border border-dashed border-white/20 flex items-center justify-center rotate-45">
+              <div className="w-24 h-24 border border-white/25" />
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* 2. Arabesque Kubah & Flora Motif */}
+      {patternType === 'arabesque' && (
+        <svg className="absolute inset-0 w-full h-full" style={{ opacity }}>
+          <defs>
+            <pattern id="arabesque-pattern" width="40" height="40" patternUnits="userSpaceOnUse">
+              {/* Islamic Arch / Mihrab silhouette repeated */}
+              <path
+                d="M10 40 L10 20 Q20 5 30 20 L30 40 Z"
+                fill="none"
+                stroke={theme.patternStroke}
+                strokeWidth="1.1"
+              />
+              <path
+                d="M20 5 Q20 18 35 20"
+                fill="none"
+                stroke={theme.patternStroke}
+                strokeWidth="0.8"
+              />
+              <circle cx="20" cy="18" r="2.5" fill={theme.patternStroke} />
+            </pattern>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#arabesque-pattern)" />
+        </svg>
+      )}
+
+      {/* 3. Guilloche Security Wave Lines (Banknote & Official State ID Style) */}
+      {patternType === 'guilloche' && (
+        <svg className="absolute inset-0 w-full h-full" style={{ opacity }}>
+          <defs>
+            <pattern id="guilloche-pattern" width="60" height="30" patternUnits="userSpaceOnUse">
+              <path
+                d="M0 15 Q15 0 30 15 T60 15"
+                fill="none"
+                stroke={theme.patternStroke}
+                strokeWidth="1.2"
+              />
+              <path
+                d="M0 15 Q15 30 30 15 T60 15"
+                fill="none"
+                stroke={theme.patternStroke}
+                strokeWidth="0.9"
+              />
+              <path
+                d="M0 5 Q15 20 30 5 T60 5"
+                fill="none"
+                stroke={theme.patternStroke}
+                strokeWidth="0.6"
+              />
+              <path
+                d="M0 25 Q15 10 30 25 T60 25"
+                fill="none"
+                stroke={theme.patternStroke}
+                strokeWidth="0.6"
+              />
+            </pattern>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#guilloche-pattern)" />
+        </svg>
+      )}
+
+      {/* 4. Subtle Micro-Geometric Grid */}
+      {patternType === 'subtle' && (
+        <div 
+          className="absolute inset-0 bg-[radial-gradient(#ffffff_1.2px,transparent_1.2px)] [background-size:10px_10px]"
+          style={{ opacity: density === 'vivid' ? 0.16 : 0.08 }}
+        />
+      )}
+
+      {/* Corner Ornamental Filigree Accents (4 Sudut KTA) */}
+      <svg className="absolute top-1.5 left-1.5 w-6 h-6 opacity-35" viewBox="0 0 24 24" fill="none">
+        <path d="M2 12 L2 2 L12 2" stroke={theme.patternStroke} strokeWidth="1.8" strokeLinecap="round" />
+        <circle cx="5" cy="5" r="1.5" fill={theme.patternStroke} />
+      </svg>
+      <svg className="absolute top-1.5 right-1.5 w-6 h-6 opacity-35" viewBox="0 0 24 24" fill="none">
+        <path d="M22 12 L22 2 L12 2" stroke={theme.patternStroke} strokeWidth="1.8" strokeLinecap="round" />
+        <circle cx="19" cy="5" r="1.5" fill={theme.patternStroke} />
+      </svg>
+      <svg className="absolute bottom-1.5 left-1.5 w-6 h-6 opacity-35" viewBox="0 0 24 24" fill="none">
+        <path d="M2 12 L2 22 L12 22" stroke={theme.patternStroke} strokeWidth="1.8" strokeLinecap="round" />
+        <circle cx="5" cy="19" r="1.5" fill={theme.patternStroke} />
+      </svg>
+      <svg className="absolute bottom-1.5 right-1.5 w-6 h-6 opacity-35" viewBox="0 0 24 24" fill="none">
+        <path d="M22 12 L22 22 L12 22" stroke={theme.patternStroke} strokeWidth="1.8" strokeLinecap="round" />
+        <circle cx="19" cy="19" r="1.5" fill={theme.patternStroke} />
+      </svg>
+
+      {/* Ambient Radial Color Glow */}
+      <div className={`absolute -top-12 -right-12 w-40 h-40 rounded-full ${theme.glowColor} blur-2xl pointer-events-none`} />
+      <div className={`absolute -bottom-12 -left-12 w-32 h-32 rounded-full ${theme.glowColor} blur-xl pointer-events-none`} />
+    </div>
+  );
+};
+
+// ============================================================================
 // CARD FRONT COMPONENT (High-Definition Layout)
 // ============================================================================
 interface CardProps {
@@ -437,6 +671,8 @@ interface CardProps {
   profile: MosqueProfile;
   theme: IdCardTheme;
   orientation: 'landscape' | 'portrait';
+  patternType: PatternType;
+  patternDensity: 'normal' | 'vivid';
   qrCodeUrl?: string;
   onQrClick?: () => void;
 }
@@ -446,6 +682,8 @@ export const CardFront: React.FC<CardProps> = ({
   profile,
   theme,
   orientation,
+  patternType,
+  patternDensity,
   qrCodeUrl,
   onQrClick,
 }) => {
@@ -457,27 +695,26 @@ export const CardFront: React.FC<CardProps> = ({
         className={`w-[420px] h-[265px] ${theme.primaryBg} ${theme.textColor} rounded-2xl p-4 shadow-xl relative overflow-hidden border ${theme.borderClass} flex flex-col justify-between shrink-0 select-none print:shadow-none print:m-2`}
         style={{ aspectRatio: '85.6 / 53.98' }}
       >
-        {/* Subtle Islamic Geometric Watermark Lattice */}
-        <div className="absolute inset-0 opacity-[0.07] pointer-events-none bg-[radial-gradient(#ffffff_1px,transparent_1px)] [background-size:12px_12px]" />
-        
-        {/* Golden decorative accent curve */}
-        <div className="absolute -top-16 -right-16 w-36 h-36 rounded-full bg-amber-400/10 blur-xl pointer-events-none" />
+        {/* Motif Pattern Overlay */}
+        <CardPatternOverlay theme={theme} patternType={patternType} density={patternDensity} />
 
         {/* Card Header: Mosque Emblem & Titles */}
-        <div className="flex items-center gap-3 relative z-10 border-b border-white/10 pb-2">
-          <img
-            src={profile.emblemUrl}
-            alt="Emblem"
-            className="w-10 h-10 object-contain rounded-full bg-white p-0.5 border border-amber-400 shrink-0 shadow-xs"
-          />
+        <div className="flex items-center gap-3 relative z-10 border-b border-white/15 pb-2">
+          <div className="w-11 h-11 rounded-full bg-white p-0.5 border-2 border-white/80 shrink-0 shadow-md flex items-center justify-center overflow-hidden">
+            <img
+              src={profile.emblemUrl}
+              alt="Logo Remas"
+              className="w-full h-full object-contain"
+            />
+          </div>
           <div className="flex-1 min-w-0">
-            <h4 className="text-[11px] font-extrabold uppercase tracking-wider text-amber-300 leading-tight truncate">
+            <h4 className={`text-[11px] font-extrabold uppercase tracking-wider ${theme.accentColor} leading-tight truncate`}>
               {profile.orgName}
             </h4>
-            <p className="text-[10px] text-white/90 font-medium truncate">
+            <p className="text-[10px] text-white font-medium truncate">
               {profile.mosqueName}
             </p>
-            <p className="text-[8px] text-white/60 tracking-tight truncate">
+            <p className="text-[8px] text-white/70 tracking-tight truncate font-medium">
               KARTU TANDA ANGGOTA (KTA) RESMI
             </p>
           </div>
@@ -487,7 +724,7 @@ export const CardFront: React.FC<CardProps> = ({
         <div className="flex items-center gap-3.5 relative z-10 py-1">
           {/* Member Photo Frame */}
           <div className="relative shrink-0">
-            <div className="w-20 h-24 rounded-lg overflow-hidden border-2 border-amber-300 shadow-md bg-slate-800">
+            <div className={`w-20 h-24 rounded-lg overflow-hidden border-2 ${theme.borderAccent} shadow-md bg-slate-900`}>
               <img
                 src={member.photoUrl}
                 alt={member.name}
@@ -499,7 +736,7 @@ export const CardFront: React.FC<CardProps> = ({
               />
             </div>
             {/* Gender Badge */}
-            <span className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 text-[8px] font-bold px-1.5 py-0.5 bg-amber-400 text-slate-950 rounded-sm uppercase tracking-tight shadow-xs whitespace-nowrap">
+            <span className={`absolute -bottom-1.5 left-1/2 -translate-x-1/2 text-[8px] px-1.5 py-0.5 ${theme.badgeClass} rounded-sm uppercase tracking-tight shadow-xs whitespace-nowrap`}>
               {member.gender}
             </span>
           </div>
@@ -507,25 +744,25 @@ export const CardFront: React.FC<CardProps> = ({
           {/* Member Identification Details */}
           <div className="flex-1 min-w-0 space-y-1">
             <div>
-              <p className="text-[9px] uppercase tracking-wider text-amber-300 font-semibold font-mono">
+              <p className={`text-[9.5px] uppercase tracking-wider ${theme.accentColor} font-bold font-mono`}>
                 {member.nia}
               </p>
-              <h3 className="text-sm font-extrabold text-white leading-tight truncate">
+              <h3 className="text-sm font-extrabold text-white leading-tight truncate drop-shadow-xs">
                 {member.name}
               </h3>
             </div>
 
-            <div className="text-[10px] text-white/80 space-y-0.5">
+            <div className="text-[10px] text-white/90 space-y-0.5">
               <div className="flex items-center gap-1.5">
-                <span className="text-white/50 text-[9px] w-12 shrink-0">Jabatan:</span>
-                <span className="font-semibold text-amber-200 truncate">{member.role}</span>
+                <span className="text-white/60 text-[9px] w-12 shrink-0">Jabatan:</span>
+                <span className={`font-semibold ${theme.secondaryAccent} truncate`}>{member.role}</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <span className="text-white/50 text-[9px] w-12 shrink-0">Divisi:</span>
-                <span className="font-medium text-white/90 truncate">{member.division}</span>
+                <span className="text-white/60 text-[9px] w-12 shrink-0">Divisi:</span>
+                <span className="font-medium text-white/95 truncate">{member.division}</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <span className="text-white/50 text-[9px] w-12 shrink-0">Status:</span>
+                <span className="text-white/60 text-[9px] w-12 shrink-0">Status:</span>
                 <span className="font-medium text-emerald-300 truncate">
                   Terdaftar {member.status}
                 </span>
@@ -538,7 +775,7 @@ export const CardFront: React.FC<CardProps> = ({
             <button
               onClick={onQrClick}
               title="Klik untuk verifikasi digital"
-              className="p-1 bg-white rounded-lg shadow-sm border border-amber-400/40 hover:scale-105 transition-transform cursor-pointer"
+              className="p-1 bg-white rounded-lg shadow-sm border border-white/30 hover:scale-105 transition-transform cursor-pointer"
             >
               {qrCodeUrl ? (
                 <img src={qrCodeUrl} alt="QR Code" className="w-16 h-16 rounded" />
@@ -548,18 +785,18 @@ export const CardFront: React.FC<CardProps> = ({
                 </div>
               )}
             </button>
-            <span className="text-[7px] text-amber-300/80 mt-1 uppercase tracking-tight font-medium">
+            <span className={`text-[7.5px] ${theme.accentColor} mt-1 uppercase tracking-tight font-bold`}>
               Scan Verifikasi
             </span>
           </div>
         </div>
 
         {/* Card Footer: Validity & Chip Motif */}
-        <div className="flex items-center justify-between text-[8px] text-white/60 border-t border-white/10 pt-1.5 relative z-10">
+        <div className="flex items-center justify-between text-[8px] text-white/70 border-t border-white/15 pt-1.5 relative z-10">
           <span className="tracking-tight">
-            Berlaku s/d: <strong className="text-white/90">{profile.cardValidUntil}</strong>
+            Berlaku s/d: <strong className="text-white font-bold">{profile.cardValidUntil}</strong>
           </span>
-          <span className="font-mono text-amber-300/80 tracking-widest uppercase">
+          <span className={`font-mono ${theme.accentColor} font-bold tracking-widest uppercase`}>
             SIM-REMAS ID
           </span>
         </div>
@@ -573,29 +810,31 @@ export const CardFront: React.FC<CardProps> = ({
       className={`w-[270px] h-[425px] ${theme.primaryBg} ${theme.textColor} rounded-2xl p-4 shadow-xl relative overflow-hidden border ${theme.borderClass} flex flex-col justify-between shrink-0 select-none print:shadow-none print:m-2 text-center`}
     >
       {/* Lanyard punch hole simulation */}
-      <div className="no-print mx-auto w-12 h-2.5 rounded-full bg-slate-800/80 border border-white/20 mb-1" />
+      <div className="no-print mx-auto w-12 h-2.5 rounded-full bg-slate-900/90 border border-white/30 mb-1 z-10" />
 
-      {/* Subtle lattice watermark */}
-      <div className="absolute inset-0 opacity-[0.06] pointer-events-none bg-[radial-gradient(#ffffff_1px,transparent_1px)] [background-size:12px_12px]" />
+      {/* Motif Pattern Overlay */}
+      <CardPatternOverlay theme={theme} patternType={patternType} density={patternDensity} />
 
       {/* Header */}
-      <div className="flex flex-col items-center border-b border-white/10 pb-2.5">
-        <img
-          src={profile.emblemUrl}
-          alt="Emblem"
-          className="w-12 h-12 object-contain rounded-full bg-white p-0.5 border border-amber-400 shadow-xs mb-1.5"
-        />
-        <h4 className="text-[11px] font-extrabold uppercase tracking-wider text-amber-300 leading-tight">
+      <div className="flex flex-col items-center border-b border-white/15 pb-2.5 relative z-10">
+        <div className="w-12 h-12 rounded-full bg-white p-0.5 border-2 border-white/80 shadow-md flex items-center justify-center overflow-hidden mb-1.5">
+          <img
+            src={profile.emblemUrl}
+            alt="Logo"
+            className="w-full h-full object-contain"
+          />
+        </div>
+        <h4 className={`text-[11px] font-extrabold uppercase tracking-wider ${theme.accentColor} leading-tight`}>
           {profile.orgName}
         </h4>
-        <p className="text-[9px] text-white/80 font-medium">
+        <p className="text-[9px] text-white/90 font-medium">
           {profile.mosqueName}
         </p>
       </div>
 
       {/* Photo */}
-      <div className="my-auto py-2 flex flex-col items-center">
-        <div className="w-24 h-28 rounded-xl overflow-hidden border-2 border-amber-300 shadow-md bg-slate-800 mb-2">
+      <div className="my-auto py-1 flex flex-col items-center relative z-10">
+        <div className={`w-24 h-28 rounded-xl overflow-hidden border-2 ${theme.borderAccent} shadow-md bg-slate-900 mb-2 relative`}>
           <img
             src={member.photoUrl}
             alt={member.name}
@@ -605,25 +844,28 @@ export const CardFront: React.FC<CardProps> = ({
               (e.target as HTMLElement).style.display = 'none';
             }}
           />
+          <span className={`absolute bottom-0 inset-x-0 text-[8px] py-0.5 ${theme.badgeClass} uppercase tracking-tight text-center`}>
+            {member.gender}
+          </span>
         </div>
 
-        <p className="text-[9px] font-mono font-bold text-amber-300 tracking-wider">
+        <p className={`text-[9.5px] font-mono font-bold ${theme.accentColor} tracking-wider`}>
           {member.nia}
         </p>
         <h3 className="text-sm font-extrabold text-white leading-snug px-1">
           {member.name}
         </h3>
-        <p className="text-[10px] text-amber-200 font-semibold mt-0.5">
+        <p className={`text-[10px] ${theme.secondaryAccent} font-semibold mt-0.5`}>
           {member.role}
         </p>
-        <p className="text-[9px] text-white/70">
+        <p className="text-[9px] text-white/80">
           {member.division}
         </p>
       </div>
 
       {/* QR Code and Validity */}
-      <div className="border-t border-white/10 pt-2 flex items-center justify-between px-2">
-        <div className="text-left text-[8px] text-white/70">
+      <div className="border-t border-white/15 pt-2 flex items-center justify-between px-2 relative z-10">
+        <div className="text-left text-[8px] text-white/80">
           <p>Masa Berlaku:</p>
           <p className="font-semibold text-white">{profile.cardValidUntil}</p>
           <p className="text-emerald-300 font-medium mt-0.5">{member.status}</p>
@@ -631,7 +873,7 @@ export const CardFront: React.FC<CardProps> = ({
 
         <button
           onClick={onQrClick}
-          className="p-1 bg-white rounded-md border border-amber-300 shadow-xs"
+          className="p-1 bg-white rounded-md border border-white/30 shadow-xs cursor-pointer"
         >
           {qrCodeUrl ? (
             <img src={qrCodeUrl} alt="QR Code" className="w-12 h-12" />
@@ -645,14 +887,16 @@ export const CardFront: React.FC<CardProps> = ({
 };
 
 // ============================================================================
-// CARD BACK COMPONENT (Terms, Signature & Barcode)
+// CARD BACK COMPONENT (Terms, Signature & Official Stamp)
 // ============================================================================
 export const CardBack: React.FC<{
   member: Member;
   profile: MosqueProfile;
   theme: IdCardTheme;
   orientation: 'landscape' | 'portrait';
-}> = ({ member, profile, theme, orientation }) => {
+  patternType: PatternType;
+  patternDensity: 'normal' | 'vivid';
+}> = ({ member, profile, theme, orientation, patternType, patternDensity }) => {
   const isLandscape = orientation === 'landscape';
 
   if (isLandscape) {
@@ -661,18 +905,18 @@ export const CardBack: React.FC<{
         className={`w-[420px] h-[265px] ${theme.primaryBg} ${theme.textColor} rounded-2xl p-4 shadow-xl relative overflow-hidden border ${theme.borderClass} flex flex-col justify-between shrink-0 select-none print:shadow-none print:m-2`}
         style={{ aspectRatio: '85.6 / 53.98' }}
       >
-        {/* Subtle watermark */}
-        <div className="absolute inset-0 opacity-[0.06] pointer-events-none bg-[radial-gradient(#ffffff_1px,transparent_1px)] [background-size:12px_12px]" />
+        {/* Motif Pattern Overlay */}
+        <CardPatternOverlay theme={theme} patternType={patternType} density={patternDensity} />
 
         {/* Magnetic stripe simulation */}
-        <div className="absolute top-3 left-0 right-0 h-7 bg-slate-900 border-y border-white/10" />
+        <div className="absolute top-3 left-0 right-0 h-6 bg-slate-950/80 border-y border-white/15 z-10" />
 
-        <div className="pt-8 space-y-1 relative z-10">
-          <h4 className="text-[9px] font-bold text-amber-300 uppercase tracking-wider">
+        <div className="pt-7 space-y-1 relative z-10">
+          <h4 className={`text-[9px] font-bold ${theme.accentColor} uppercase tracking-wider`}>
             KETENTUAN KARTU TANDA ANGGOTA (KTA)
           </h4>
-          <ol className="text-[7.5px] text-white/80 space-y-0.5 list-decimal pl-3 leading-tight">
-            <li>Kartu ini adalah identitas resmi anggota {profile.orgName}.</li>
+          <ol className="text-[7.5px] text-white/85 space-y-0.5 list-decimal pl-3 leading-tight font-medium">
+            <li>Kartu ini adalah identitas resmi keanggotaan {profile.orgName}.</li>
             <li>Wajib dibawa saat menghadiri kajian, rapat, dan kegiatan operasional masjid.</li>
             <li>Pemegang kartu wajib menjaga nama baik masjid dan berakhlakul karimah.</li>
             <li>Bila kartu ini hilang atau ditemukan, mohon hubungi sekretariat di {profile.contactNumber}.</li>
@@ -680,14 +924,14 @@ export const CardBack: React.FC<{
         </div>
 
         {/* Motto banner */}
-        <div className="bg-white/5 border border-white/10 rounded-lg p-1.5 text-center relative z-10">
-          <p className="text-[7.5px] italic text-amber-200">
+        <div className="bg-white/10 backdrop-blur-xs border border-white/15 rounded-lg p-1.5 text-center relative z-10">
+          <p className={`text-[7.5px] italic ${theme.secondaryAccent}`}>
             "{profile.motto}"
           </p>
         </div>
 
         {/* Signatures & Official Stamp */}
-        <div className="flex items-end justify-between px-2 pt-1 border-t border-white/10 relative z-10 text-[8px]">
+        <div className="flex items-end justify-between px-2 pt-1 border-t border-white/15 relative z-10 text-[8px]">
           {/* Barcode representation */}
           <div className="space-y-0.5">
             <div className="flex gap-[1.5px] h-5 items-end">
@@ -699,23 +943,34 @@ export const CardBack: React.FC<{
                 />
               ))}
             </div>
-            <p className="font-mono text-[7px] text-white/60 tracking-wider">
+            <p className="font-mono text-[7px] text-white/70 tracking-wider">
               {member.nia}
             </p>
           </div>
 
-          {/* Digital Signature & Seal */}
-          <div className="text-right space-y-0.5 relative">
-            {/* Stamp simulation */}
-            <div className="absolute -top-3 right-12 w-10 h-10 rounded-full border border-emerald-400/50 bg-emerald-500/10 flex items-center justify-center rotate-12 pointer-events-none">
-              <span className="text-[6px] font-extrabold text-emerald-300 uppercase text-center leading-[7px]">
-                CAP RESMI<br/>REMAS
-              </span>
-            </div>
+          {/* Digital Signature & Official Stamp */}
+          <div className="text-right space-y-0.5 relative pr-1">
+            {/* Cap / Stempel Resmi Remas */}
+            {profile.stampUrl ? (
+              <div className="absolute -top-5 right-10 w-14 h-14 pointer-events-none select-none z-20">
+                <img
+                  src={profile.stampUrl}
+                  alt="Cap Resmi Remas"
+                  className="w-full h-full object-contain rotate-[-12deg] drop-shadow-md opacity-95"
+                />
+              </div>
+            ) : (
+              <div className="absolute -top-4 right-10 w-12 h-12 rounded-full border-2 border-emerald-400/80 bg-emerald-500/15 backdrop-blur-xs flex flex-col items-center justify-center rotate-[-10deg] pointer-events-none shadow-xs">
+                <span className="text-[5.5px] font-extrabold text-emerald-300 uppercase text-center leading-[6.5px]">
+                  CAP RESMI<br/>REMAJA MASJID
+                </span>
+                <span className="text-[4.5px] text-emerald-200 font-mono mt-0.5">SAH</span>
+              </div>
+            )}
 
-            <p className="text-[7px] text-white/60">{profile.city}</p>
-            <p className="text-[7px] text-amber-300 font-semibold">Ketua Umum</p>
-            <p className="font-serif italic text-[8.5px] text-white/90 pt-1 underline decoration-amber-400">
+            <p className="text-[7px] text-white/70">{profile.city}</p>
+            <p className={`text-[7px] ${theme.accentColor} font-bold`}>Ketua Umum</p>
+            <p className="font-serif italic text-[8.5px] text-white pt-1 underline decoration-white/60">
               {profile.leaderName}
             </p>
           </div>
@@ -730,13 +985,16 @@ export const CardBack: React.FC<{
       className={`w-[270px] h-[425px] ${theme.primaryBg} ${theme.textColor} rounded-2xl p-4 shadow-xl relative overflow-hidden border ${theme.borderClass} flex flex-col justify-between shrink-0 select-none print:shadow-none print:m-2`}
     >
       {/* Lanyard punch hole simulation */}
-      <div className="no-print mx-auto w-12 h-2.5 rounded-full bg-slate-800/80 border border-white/20 mb-1" />
+      <div className="no-print mx-auto w-12 h-2.5 rounded-full bg-slate-900/90 border border-white/30 mb-1 z-10" />
 
-      <div>
-        <h4 className="text-[10px] font-bold text-amber-300 uppercase tracking-wider text-center border-b border-white/10 pb-1.5 mb-2">
+      {/* Motif Pattern Overlay */}
+      <CardPatternOverlay theme={theme} patternType={patternType} density={patternDensity} />
+
+      <div className="relative z-10">
+        <h4 className={`text-[10px] font-bold ${theme.accentColor} uppercase tracking-wider text-center border-b border-white/15 pb-1.5 mb-2`}>
           TATA TERTIB ANGGOTA
         </h4>
-        <ol className="text-[8px] text-white/80 space-y-1 list-decimal pl-3 leading-relaxed">
+        <ol className="text-[8px] text-white/85 space-y-1 list-decimal pl-3 leading-relaxed font-medium">
           <li>Kartu ini adalah identitas resmi anggota {profile.orgName}.</li>
           <li>Wajib dibawa saat kegiatan kajian, musyawarah, dan gotong royong.</li>
           <li>Menjunjung tinggi ukhuwah Islamiyah dan syariat Islam.</li>
@@ -744,25 +1002,43 @@ export const CardBack: React.FC<{
         </ol>
       </div>
 
-      <div className="bg-white/5 border border-white/10 rounded-lg p-2 text-center my-2">
-        <p className="text-[8px] italic text-amber-200">
+      <div className="bg-white/10 backdrop-blur-xs border border-white/15 rounded-lg p-2 text-center my-2 relative z-10">
+        <p className={`text-[8px] italic ${theme.secondaryAccent}`}>
           "{profile.motto}"
         </p>
-        <p className="text-[7px] text-white/50 mt-1">
+        <p className="text-[7px] text-white/60 mt-1">
           Sekretariat: {profile.address}
         </p>
       </div>
 
       {/* Signature & Barcode */}
-      <div className="border-t border-white/10 pt-2 space-y-2">
-        <div className="flex justify-between items-end text-[8px]">
+      <div className="border-t border-white/15 pt-2 space-y-2 relative z-10">
+        <div className="flex justify-between items-end text-[8px] relative">
           <div>
-            <p className="text-[7px] text-white/60">Kontak Sekretariat</p>
-            <p className="font-mono text-white/90">{profile.contactNumber}</p>
+            <p className="text-[7px] text-white/70">Kontak Sekretariat</p>
+            <p className="font-mono text-white font-semibold">{profile.contactNumber}</p>
           </div>
-          <div className="text-right">
-            <p className="text-[7px] text-amber-300">Ketua Umum</p>
-            <p className="italic font-serif text-[9px] text-white underline decoration-amber-400">
+
+          <div className="text-right relative pr-1">
+            {/* Cap / Stempel Resmi */}
+            {profile.stampUrl ? (
+              <div className="absolute -top-5 right-12 w-12 h-12 pointer-events-none select-none z-20">
+                <img
+                  src={profile.stampUrl}
+                  alt="Cap Resmi Remas"
+                  className="w-full h-full object-contain rotate-[-12deg] drop-shadow-md opacity-95"
+                />
+              </div>
+            ) : (
+              <div className="absolute -top-4 right-10 w-11 h-11 rounded-full border-2 border-emerald-400/80 bg-emerald-500/15 flex flex-col items-center justify-center rotate-[-10deg] pointer-events-none">
+                <span className="text-[5px] font-extrabold text-emerald-300 uppercase text-center leading-[6px]">
+                  CAP RESMI<br/>REMAS
+                </span>
+              </div>
+            )}
+
+            <p className={`text-[7px] ${theme.accentColor} font-bold`}>Ketua Umum</p>
+            <p className="italic font-serif text-[9px] text-white underline decoration-white/60">
               {profile.leaderName}
             </p>
           </div>
@@ -779,7 +1055,7 @@ export const CardBack: React.FC<{
               />
             ))}
           </div>
-          <p className="font-mono text-[7px] text-white/60 tracking-wider mt-0.5">
+          <p className="font-mono text-[7px] text-white/70 tracking-wider mt-0.5">
             {member.nia}
           </p>
         </div>

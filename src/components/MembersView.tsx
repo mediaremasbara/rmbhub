@@ -6,6 +6,7 @@ import {
   Search, 
   Filter, 
   Download, 
+  Upload,
   CreditCard, 
   Phone, 
   Edit, 
@@ -17,6 +18,7 @@ import {
   FileSpreadsheet
 } from 'lucide-react';
 import { MemberDetailModal } from './MemberDetailModal';
+import { ImportCsvModal } from './ImportCsvModal';
 
 interface MembersViewProps {
   onOpenAddMember: () => void;
@@ -30,6 +32,7 @@ export const MembersView: React.FC<MembersViewProps> = ({
   const { 
     members, 
     deleteMember, 
+    importMembers,
     setSelectedMemberForCard, 
     setActiveTab, 
     attendanceSessions, 
@@ -43,6 +46,8 @@ export const MembersView: React.FC<MembersViewProps> = ({
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('table');
   const [inspectMember, setInspectMember] = useState<Member | null>(null);
+  const [isImportCsvOpen, setIsImportCsvOpen] = useState(false);
+  const [importSuccessMsg, setImportSuccessMsg] = useState<string | null>(null);
 
   // Filter members
   const filteredMembers = members.filter(m => {
@@ -139,6 +144,14 @@ export const MembersView: React.FC<MembersViewProps> = ({
 
           <div className="flex items-center gap-2.5">
             <button
+              onClick={() => setIsImportCsvOpen(true)}
+              className="px-3 py-2 bg-blue-50 hover:bg-blue-100 text-blue-800 border border-blue-200 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+              title="Unggah spreadsheet CSV untuk impor massal anggota"
+            >
+              <Upload className="w-3.5 h-3.5 text-blue-700" />
+              <span>Impor CSV</span>
+            </button>
+            <button
               onClick={exportMembersCsv}
               className="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
               title="Unduh format spreadsheet untuk takmir masjid"
@@ -155,6 +168,18 @@ export const MembersView: React.FC<MembersViewProps> = ({
             </button>
           </div>
         </div>
+
+        {importSuccessMsg && (
+          <div className="mt-3 p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-800 font-semibold flex items-center justify-between animate-in fade-in">
+            <span>✓ {importSuccessMsg}</span>
+            <button
+              onClick={() => setImportSuccessMsg(null)}
+              className="text-emerald-600 hover:text-emerald-900 font-bold"
+            >
+              ✕
+            </button>
+          </div>
+        )}
 
         {/* Search & Filter Toolbar */}
         <div className="grid grid-cols-1 md:grid-cols-12 gap-3 mt-5 pt-4 border-t border-slate-100 text-xs">
@@ -177,15 +202,10 @@ export const MembersView: React.FC<MembersViewProps> = ({
               onChange={(e) => setSelectedDivision(e.target.value)}
               className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 text-xs focus:outline-emerald-600 focus:bg-white"
             >
-              <option value="all">Semua Divisi / Bidang</option>
-              <option value="BPH (Badan Pengurus Harian)">BPH (Badan Pengurus Harian)</option>
-              <option value="Dakwah & Kajian">Dakwah & Kajian</option>
-              <option value="Humas & Kemitraan">Humas & Kemitraan</option>
-              <option value="Media, IT & Publikasi">Media, IT & Publikasi</option>
-              <option value="Kepemudaan & Olahraga">Kepemudaan & Olahraga</option>
-              <option value="Keputrian & Pemberdayaan">Keputrian & Pemberdayaan</option>
-              <option value="Logistik & Sarpras">Logistik & Sarpras</option>
-              <option value="Anggota Aktif">Anggota Aktif</option>
+              <option value="all">Semua Divisi / Bidang ({members.length})</option>
+              <option value="BPH">BPH</option>
+              <option value="Media & Humas">Media & Humas</option>
+              <option value="Ekraf & Event">Ekraf & Event</option>
             </select>
           </div>
 
@@ -487,6 +507,18 @@ export const MembersView: React.FC<MembersViewProps> = ({
           }}
         />
       )}
+
+      {/* Import CSV Modal */}
+      <ImportCsvModal
+        isOpen={isImportCsvOpen}
+        onClose={() => setIsImportCsvOpen(false)}
+        onImport={(imported, mode) => {
+          importMembers(imported, mode);
+          setImportSuccessMsg(`Berhasil mengimpor ${imported.length} data anggota (${mode === 'replace' ? 'Database Diperbarui' : 'Data Ditambahkan'})!`);
+          setTimeout(() => setImportSuccessMsg(null), 5000);
+        }}
+        currentTotalMembers={members.length}
+      />
     </div>
   );
 };
