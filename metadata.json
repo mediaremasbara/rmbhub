@@ -1,0 +1,6 @@
+{
+  "name": "SIM-Remas: Database & KTA Digital Remaja Masjid",
+  "description": "Sistem Informasi Terpusat Biodata, Presensi Kehadiran, Partisipasi Kegiatan, dan Pembuat ID Card Digital Siap Cetak untuk Remaja Masjid.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
